@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Admin | Kloak 3D Prints</title>
+    <link rel="stylesheet" href="./styles.css" />
+    <style>
+      .admin-container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 2rem;
+      }
+
+      .login-form {
+        background: var(--panel);
+        border: 1px solid rgba(216, 166, 58, 0.35);
+        border-radius: 0.5rem;
+        padding: 2rem;
+        max-width: 400px;
+        margin: 3rem auto;
+      }
+
+      .login-form input {
+        width: 100%;
+        padding: 0.75rem;
+        margin: 0.5rem 0 1rem;
+        background: #000;
+        color: var(--text);
+        border: 1px solid var(--gold);
+        border-radius: 0.25rem;
+      }
+
+      .admin-section {
+        background: var(--panel);
+        border: 1px solid rgba(216, 166, 58, 0.35);
+        border-radius: 0.5rem;
+        padding: 2rem;
+        margin: 2rem 0;
+      }
+
+      .orders-list {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+      }
+
+      .order-card {
+        background: rgba(0, 0, 0, 0.3);
+        border-left: 3px solid var(--gold);
+        padding: 1.5rem;
+        border-radius: 0.25rem;
+      }
+
+      .order-card h4 {
+        color: var(--gold-soft);
+        margin: 0 0 0.5rem;
+      }
+
+      .order-info {
+        font-size: 0.9rem;
+        color: var(--muted);
+        margin: 0.5rem 0;
+      }
+
+      .add-to-gallery-form {
+        background: rgba(0, 0, 0, 0.3);
+        padding: 1rem;
+        border-radius: 0.25rem;
+        margin-top: 1rem;
+      }
+
+      .form-group {
+        margin: 1rem 0;
+      }
+
+      .form-group label {
+        display: block;
+        color: var(--text);
+        margin-bottom: 0.5rem;
+        font-weight: 600;
+      }
+
+      .form-group input,
+      .form-group textarea {
+        width: 100%;
+        padding: 0.75rem;
+        background: #000;
+        color: var(--text);
+        border: 1px solid var(--gold);
+        border-radius: 0.25rem;
+        font-family: inherit;
+      }
+
+      .form-group textarea {
+        resize: vertical;
+        min-height: 80px;
+      }
+
+      .button-group {
+        display: flex;
+        gap: 1rem;
+        margin-top: 1rem;
+      }
+
+      .button-small {
+        padding: 0.6rem 1rem;
+        font-size: 0.9rem;
+      }
+
+      .btn-approve {
+        background: #2f5d8c;
+        color: #fff;
+      }
+
+      .btn-approve:hover {
+        background: #1a3a56;
+      }
+
+      .btn-cancel {
+        background: transparent;
+        border: 1px solid var(--gold);
+        color: var(--gold-soft);
+      }
+
+      .gallery-posts-list {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+        gap: 1rem;
+        margin-top: 1rem;
+      }
+
+      .gallery-post-card {
+        background: rgba(0, 0, 0, 0.3);
+        border: 1px solid rgba(216, 166, 58, 0.35);
+        border-radius: 0.25rem;
+        padding: 1rem;
+      }
+
+      .gallery-post-card img {
+        width: 100%;
+        height: 200px;
+        object-fit: cover;
+        border-radius: 0.25rem;
+        margin-bottom: 0.5rem;
+      }
+
+      .gallery-post-card h5 {
+        color: var(--gold-soft);
+        margin: 0.5rem 0;
+      }
+
+      .gallery-post-card p {
+        color: var(--muted);
+        font-size: 0.9rem;
+        margin: 0;
+      }
+
+      .btn-delete {
+        background: #8a1d1d;
+        color: #fff;
+        font-size: 0.85rem;
+        padding: 0.4rem 0.8rem;
+        margin-top: 0.5rem;
+      }
+
+      .status-pending {
+        color: #f5d47d;
+        font-weight: 600;
+      }
+    </style>
+  </head>
+  <body>
+    <header class="hero hero--compact">
+      <div class="hero__content">
+        <div class="hero__topbar">
+          <a class="brand" href="./home.html">Kloak 3D Prints</a>
+          <h1 class="hero__headline">⚔️ Admin Portal</h1>
+          <button id="logout-btn" class="hero__link" style="background: none; border: none; cursor: pointer; color: var(--gold-soft);">Logout</button>
+        </div>
+      </div>
+    </header>
+
+    <main>
+      <div id="login-page">
+        <div class="login-form">
+          <h2 style="color: var(--gold-soft); text-align: center;">Admin Login</h2>
+          <form id="login-form">
+            <input type="password" id="password" placeholder="Enter admin password" required />
+            <button type="submit" class="button button--primary" style="width: 100%;">Login</button>
+          </form>
+        </div>
+      </div>
+
+      <div id="admin-page" style="display: none;">
+        <div class="admin-container">
+          <section class="admin-section">
+            <h2>📋 Pending Gallery Requests</h2>
+            <div id="pending-orders" class="orders-list">
+              <p style="color: var(--muted);">Loading orders...</p>
+            </div>
+          </section>
+
+          <section class="admin-section">
+            <h2>🖼️ Gallery Posts</h2>
+            <div id="gallery-posts" class="gallery-posts-list">
+              <p style="color: var(--muted);">Loading gallery posts...</p>
+            </div>
+          </section>
+        </div>
+      </div>
+    </main>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+    <script>
+      const SUPABASE_URL = 'https://dhzrhgyjpqotoujfwdwl.supabase.co';
+      const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRoenJoZ3lqcHFvdG91amZ3ZHdsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQzOTk0MzcsImV4cCI6MjA5OTk3NTQzN30.rK02i_fFqcsZO6s9TCy-WUhXYic7Gg7p1Lrfrdu0qqI';
+      const ADMIN_PASSWORD = 'Eirik2024'; // Change this to your preferred password
+
+      let supabaseClient;
+      if (window.supabase && window.supabase.createClient) {
+        supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+      }
+
+      const loginForm = document.getElementById('login-form');
+      const passwordInput = document.getElementById('password');
+      const loginPage = document.getElementById('login-page');
+      const adminPage = document.getElementById('admin-page');
+      const logoutBtn = document.getElementById('logout-btn');
+
+      // Check if already logged in
+      if (sessionStorage.getItem('adminLoggedIn') === 'true') {
+        showAdminPage();
+      }
+
+      loginForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+        if (passwordInput.value === ADMIN_PASSWORD) {
+          sessionStorage.setItem('adminLoggedIn', 'true');
+          showAdminPage();
+        } else {
+          alert('Incorrect password');
+          passwordInput.value = '';
+        }
+      });
+
+      logoutBtn.addEventListener('click', () => {
+        sessionStorage.removeItem('adminLoggedIn');
+        adminPage.style.display = 'none';
+        loginPage.style.display = 'block';
+        passwordInput.value = '';
+      });
+
+      function showAdminPage() {
+        loginPage.style.display = 'none';
+        adminPage.style.display = 'block';
+        loadPendingOrders();
+        loadGalleryPosts();
+      }
+
+      async function loadPendingOrders() {
+        try {
+          const { data, error } = await supabaseClient
+            .from('orders')
+            .select('*')
+            .eq('allow_gallery_post', true)
+            .order('created_at', { ascending: false });
+
+          if (error) throw error;
+
+          const container = document.getElementById('pending-orders');
+          if (!data || data.length === 0) {
+            container.innerHTML = '<p style="color: var(--muted);">No pending gallery requests.</p>';
+            return;
+          }
+
+          container.innerHTML = data.map(order => `
+            <div class="order-card">
+              <h4>${order.name}</h4>
+              <div class="order-info">📧 ${order.email}</div>
+              <div class="order-info">🖨️ ${order.service}</div>
+              <div class="order-info">🎨 Colors: ${order.selected_colors?.join(', ') || 'None'}</div>
+              <div class="order-info">📝 ${order.notes || 'No notes'}</div>
+              
+              <div class="add-to-gallery-form">
+                <h5 style="color: var(--gold-soft); margin: 0 0 1rem;">Add to Gallery</h5>
+                <div class="form-group">
+                  <label>Gallery Title</label>
+                  <input type="text" class="gallery-title" placeholder="Name of the print" value="${order.name}" />
+                </div>
+                <div class="form-group">
+                  <label>Description</label>
+                  <textarea class="gallery-description" placeholder="Describe the print, colors used, etc...">${order.notes || ''}</textarea>
+                </div>
+                <div class="form-group">
+                  <label>Image URL (or upload files to Supabase Storage)</label>
+                  <input type="url" class="gallery-image" placeholder="https://..." />
+                </div>
+                <div class="button-group">
+                  <button class="button button-small btn-approve" onclick="addToGallery('${order.id}', this)">Add to Gallery</button>
+                </div>
+              </div>
+            </div>
+          `).join('');
+        } catch (error) {
+          console.error('Error loading orders:', error);
+        }
+      }
+
+      async function addToGallery(orderId, button) {
+        const card = button.closest('.order-card');
+        const title = card.querySelector('.gallery-title').value;
+        const description = card.querySelector('.gallery-description').value;
+        const imageUrl = card.querySelector('.gallery-image').value;
+
+        if (!title || !imageUrl) {
+          alert('Please fill in title and image URL');
+          return;
+        }
+
+        try {
+          button.disabled = true;
+          button.textContent = 'Adding...';
+
+          const { data, error } = await supabaseClient
+            .from('gallery_posts')
+            .insert([{
+              order_id: orderId,
+              title,
+              description,
+              image_url: imageUrl,
+              created_at: new Date().toISOString()
+            }]);
+
+          if (error) throw error;
+
+          alert('Added to gallery!');
+          loadPendingOrders();
+          loadGalleryPosts();
+        } catch (error) {
+          console.error('Error adding to gallery:', error);
+          alert('Error adding to gallery');
+        } finally {
+          button.disabled = false;
+          button.textContent = 'Add to Gallery';
+        }
+      }
+
+      async function loadGalleryPosts() {
+        try {
+          const { data, error } = await supabaseClient
+            .from('gallery_posts')
+            .select('*')
+            .order('created_at', { ascending: false });
+
+          if (error) throw error;
+
+          const container = document.getElementById('gallery-posts');
+          if (!data || data.length === 0) {
+            container.innerHTML = '<p style="color: var(--muted);">No gallery posts yet.</p>';
+            return;
+          }
+
+          container.innerHTML = data.map(post => `
+            <div class="gallery-post-card">
+              <img src="${post.image_url}" alt="${post.title}" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22250%22 height=%22200%22%3E%3Crect fill=%22%231a140d%22 width=%22250%22 height=%22200%22/%3E%3Ctext x=%2250%25%22 y=%2250%25%22 dominant-baseline=%22middle%22 text-anchor=%22middle%22 fill=%22%23b5a98d%22 font-size=%2214%22%3EImage not found%3C/text%3E%3C/svg%3E'" />
+              <h5>${post.title}</h5>
+              <p>${post.description || 'No description'}</p>
+              <button class="button button-small btn-delete" onclick="deleteGalleryPost(${post.id})">Delete</button>
+            </div>
+          `).join('');
+        } catch (error) {
+          console.error('Error loading gallery posts:', error);
+        }
+      }
+
+      async function deleteGalleryPost(postId) {
+        if (!confirm('Delete this gallery post?')) return;
+
+        try {
+          const { error } = await supabaseClient
+            .from('gallery_posts')
+            .delete()
+            .eq('id', postId);
+
+          if (error) throw error;
+
+          alert('Deleted!');
+          loadGalleryPosts();
+        } catch (error) {
+          console.error('Error deleting post:', error);
+          alert('Error deleting post');
+        }
+      }
+    </script>
+  </body>
+</html>

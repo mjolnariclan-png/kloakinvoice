@@ -22,20 +22,51 @@
     </header>
 
     <main class="section">
-      <div class="gallery-grid">
-        <article class="card gallery-card">
-          <h3>Example Print 1</h3>
-          <p>Custom prop, painted in a bold color palette and printed with strong detail.</p>
-        </article>
-        <article class="card gallery-card">
-          <h3>Example Print 2</h3>
-          <p>Functional part printed in durable PLA+ with clean layer quality.</p>
-        </article>
-        <article class="card gallery-card">
-          <h3>Example Print 3</h3>
-          <p>Small display piece with a color blend that highlights the filament options available.</p>
-        </article>
+      <div id="gallery-container" class="gallery-grid">
+        <p style="color: var(--muted); grid-column: 1 / -1; text-align: center;">Loading gallery...</p>
       </div>
     </main>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+    <script>
+      const SUPABASE_URL = 'https://dhzrhgyjpqotoujfwdwl.supabase.co';
+      const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRoenJoZ3lqcHFvdG91amZ3ZHdsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQzOTk0MzcsImV4cCI6MjA5OTk3NTQzN30.rK02i_fFqcsZO6s9TCy-WUhXYic7Gg7p1Lrfrdu0qqI';
+
+      let supabaseClient;
+      if (window.supabase && window.supabase.createClient) {
+        supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+      }
+
+      async function loadGallery() {
+        try {
+          const { data, error } = await supabaseClient
+            .from('gallery_posts')
+            .select('*')
+            .order('created_at', { ascending: false });
+
+          if (error) throw error;
+
+          const container = document.getElementById('gallery-container');
+
+          if (!data || data.length === 0) {
+            container.innerHTML = '<p style="color: var(--muted); grid-column: 1 / -1; text-align: center;">Gallery coming soon! Check back for approved community work.</p>';
+            return;
+          }
+
+          container.innerHTML = data.map(post => `
+            <article class="card gallery-card">
+              <img src="${post.image_url}" alt="${post.title}" style="width: 100%; height: 200px; object-fit: cover; border-radius: 0.25rem; margin-bottom: 1rem;" onerror="this.style.display='none'" />
+              <h3>${post.title}</h3>
+              <p>${post.description || ''}</p>
+            </article>
+          `).join('');
+        } catch (error) {
+          console.error('Error loading gallery:', error);
+          document.getElementById('gallery-container').innerHTML = '<p style="color: var(--muted); grid-column: 1 / -1;">Error loading gallery.</p>';
+        }
+      }
+
+      loadGallery();
+    </script>
   </body>
 </html>
