@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Kloak 3D Prints | Custom PLA Orders</title>
+    <meta name="description" content="A Viking-themed 3D printing order form for custom PLA prints with color options and Venmo payment." />
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <header class="hero hero--compact">
+      <div class="hero__content">
+        <div class="hero__topbar">
+          <a class="brand" href="./home.html">Kloak 3D Prints</a>
+          <h1 class="hero__headline">Send your print files like a warrior of the North.</h1>
+          <a class="hero__link" href="./gallery.html">View Gallery</a>
+        </div>
+      </div>
+    </header>
+
+    <main>
+      <section class="section intro">
+        <h2>What I can offer</h2>
+        <div class="card-grid">
+          <article class="card">
+            <h3>Custom 3D prints</h3>
+            <p>From small trinkets and props to functional parts, I can print from your STL or design files and bring your ideas to life.</p>
+          </article>
+          <article class="card">
+            <h3>Color matching</h3>
+            <p>I offer a wide range of PLA and PLA+ filament colors so your print can match the look you want.</p>
+          </article>
+          <article class="card">
+            <h3>Fast quote and payment</h3>
+            <p>Send your request, I'll reply with a price, timeline, and delivery plan, then you confirm through Venmo.</p>
+          </article>
+        </div>
+
+        <div class="section-actions">
+          <a class="button button--primary" href="./order.html">Start your order</a>
+        </div>
+      </section>
+
+      <section class="section recent-completions">
+        <h2>Recently Completed</h2>
+        <div class="recent-grid" id="recentOrdersGrid">
+          <p style="text-align: center; grid-column: 1 / -1; color: var(--muted);">Loading recent orders...</p>
+        </div>
+      </section>
+    </main>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm"></script>
+    <script type="module">
+      import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
+
+      const SUPABASE_URL = 'https://dhzrhgyjpqotoujfwdwl.supabase.co';
+      const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRoenJoZ3lqcHFvdG91amZ3ZHdsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQzOTk0MzcsImV4cCI6MjA5OTk3NTQzN30.rK02i_fFqcsZO6s9TCy-WUhXYic7Gg7p1Lrfrdu0qqI';
+
+      const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
+
+      async function loadRecentOrders() {
+        try {
+          const { data, error } = await supabase
+            .from('orders')
+            .select('name, service, selected_colors, created_at')
+            .eq('allow_gallery_post', true)
+            .order('created_at', { ascending: false })
+            .limit(3);
+
+          if (error) {
+            console.error('Error fetching orders:', error);
+            document.getElementById('recentOrdersGrid').innerHTML = '<p style="grid-column: 1 / -1; text-align: center; color: var(--muted);">Unable to load recent orders.</p>';
+            return;
+          }
+
+          if (!data || data.length === 0) {
+            document.getElementById('recentOrdersGrid').innerHTML = '<p style="grid-column: 1 / -1; text-align: center; color: var(--muted);">No completed orders yet.</p>';
+            return;
+          }
+
+          const grid = document.getElementById('recentOrdersGrid');
+          grid.innerHTML = '';
+
+          data.forEach(order => {
+            const colors = order.selected_colors || [];
+            const colorDisplay = colors.length > 0 ? colors.join(', ') : 'Custom';
+            const date = new Date(order.created_at).toLocaleDateString();
+
+            const item = document.createElement('div');
+            item.className = 'recent-item';
+            item.innerHTML = `
+              <h3>${order.name}</h3>
+              <p><strong>${order.service}</strong></p>
+              <p>Colors: ${colorDisplay}</p>
+              <p style="font-size: 0.85rem; color: var(--gold);">${date}</p>
+            `;
+            grid.appendChild(item);
+          });
+        } catch (err) {
+          console.error('Unexpected error:', err);
+          document.getElementById('recentOrdersGrid').innerHTML = '<p style="grid-column: 1 / -1; text-align: center; color: var(--muted);">Error loading orders.</p>';
+        }
+      }
+
+      loadRecentOrders();
+    </script>
+  </body>
+</html>

@@ -45,6 +45,8 @@ if (form) {
       const formData = new FormData(form);
       const files = Array.from(formData.getAll('files')).filter((file) => file instanceof File);
       const uploadedFiles = await uploadFiles(files);
+      const selectedColors = formData.getAll('colors');
+      const allowGalleryPost = formData.get('allowGalleryPost') === 'on';
 
       const order = {
         name: (formData.get('name') || '').toString().trim(),
@@ -54,6 +56,9 @@ if (form) {
         deadline: (formData.get('deadline') || '').toString().trim(),
         notes: (formData.get('notes') || '').toString().trim(),
         venmo_handle: (formData.get('venmoHandle') || '').toString().trim(),
+        source_link: (formData.get('sourceLink') || '').toString().trim(),
+        selected_colors: selectedColors,
+        allow_gallery_post: allowGalleryPost,
         file_names: uploadedFiles.map((item) => item.name),
         file_paths: uploadedFiles.map((item) => item.path),
         status: 'new',

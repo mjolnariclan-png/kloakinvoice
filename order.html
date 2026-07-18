@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Order | Kloak 3D Prints</title>
+    <meta name="description" content="Submit your 3D print order." />
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <header class="hero hero--compact">
+      <div class="hero__content">
+        <div class="hero__topbar">
+          <a class="brand" href="./home.html">Kloak 3D Prints</a>
+          <h1 class="hero__headline">Submit your order</h1>
+          <a class="hero__link" href="./gallery.html">View Gallery</a>
+        </div>
+      </div>
+    </header>
+
+    <main>
+      <section class="section form-section" id="order-form">
+        <div class="section-heading">
+          <h2>Order Form</h2>
+        </div>
+
+        <form class="order-form" enctype="multipart/form-data">
+          <div class="field-grid">
+            <label>
+              Full name
+              <input type="text" name="name" required />
+            </label>
+            <label>
+              Email
+              <input type="email" name="email" required />
+            </label>
+            <label>
+              Phone
+              <input type="tel" name="phone" />
+            </label>
+            <label>
+              Print type
+              <select name="service" required>
+                <option value="Custom 3D print">Custom 3D print</option>
+                <option value="Multiple part print">Multiple part print</option>
+                <option value="Prototype / test print">Prototype / test print</option>
+                <option value="Bulk print order">Bulk print order</option>
+                <option value="Other">Other</option>
+              </select>
+            </label>
+            <label>
+              Desired deadline
+              <input type="text" name="deadline" placeholder="Example: 3 days" />
+            </label>
+            <label>
+              Venmo handle
+              <input type="text" name="venmoHandle" placeholder="@yourvenmo" />
+            </label>
+          </div>
+
+          <label>
+            Upload your files or share a source link
+            <input type="file" name="files" multiple />
+          </label>
+
+          <label>
+            Source link for the item or design
+            <input type="url" name="sourceLink" placeholder="https://..." />
+          </label>
+
+          <label>
+            Notes for the order
+            <textarea name="notes" rows="5" placeholder="Tell me about size, color choice, print quality, and any special instructions."></textarea>
+          </label>
+
+          <div class="color-box">
+            <h3>Current PLA / PLA+ colors available</h3>
+            <div class="color-swatches" role="list" aria-label="Available colors">
+              <label class="color-option"><input type="checkbox" name="colors" value="Baby Blue" /> <span class="color-dot baby-blue"></span> Baby Blue</label>
+              <label class="color-option"><input type="checkbox" name="colors" value="Babygirl Pink" /> <span class="color-dot babygirl-pink"></span> Babygirl Pink</label>
+              <label class="color-option"><input type="checkbox" name="colors" value="Black" /> <span class="color-dot black"></span> Black</label>
+              <label class="color-option"><input type="checkbox" name="colors" value="Blue" /> <span class="color-dot blue"></span> Blue</label>
+              <label class="color-option"><input type="checkbox" name="colors" value="Brown" /> <span class="color-dot brown"></span> Brown</label>
+              <label class="color-option"><input type="checkbox" name="colors" value="Clear" /> <span class="color-dot clear"></span> Clear</label>
+              <label class="color-option"><input type="checkbox" name="colors" value="Dark Blue" /> <span class="color-dot dark-blue"></span> Dark Blue</label>
+              <label class="color-option"><input type="checkbox" name="colors" value="Dark Grey" /> <span class="color-dot dark-grey"></span> Dark Grey</label>
+              <label class="color-option"><input type="checkbox" name="colors" value="Dandelion Yellow" /> <span class="color-dot dandelion-yellow"></span> Dandelion Yellow</label>
+              <label class="color-option"><input type="checkbox" name="colors" value="Fire Engine Red" /> <span class="color-dot fire-red"></span> Fire Engine Red</label>
+              <label class="color-option"><input type="checkbox" name="colors" value="Forest Green" /> <span class="color-dot forest-green"></span> Forest Green</label>
+              <label class="color-option"><input type="checkbox" name="colors" value="Grey" /> <span class="color-dot grey"></span> Grey</label>
+              <label class="color-option"><input type="checkbox" name="colors" value="Lime Green" /> <span class="color-dot lime-green"></span> Lime Green</label>
+              <label class="color-option"><input type="checkbox" name="colors" value="Metallic Purple" /> <span class="color-dot metallic-purple"></span> Metallic Purple</label>
+              <label class="color-option"><input type="checkbox" name="colors" value="Neon Green" /> <span class="color-dot neon-green"></span> Neon Green</label>
+              <label class="color-option"><input type="checkbox" name="colors" value="Orange" /> <span class="color-dot orange"></span> Orange</label>
+              <label class="color-option"><input type="checkbox" name="colors" value="Purple" /> <span class="color-dot purple"></span> Purple</label>
+              <label class="color-option"><input type="checkbox" name="colors" value="Red" /> <span class="color-dot red"></span> Red</label>
+              <label class="color-option"><input type="checkbox" name="colors" value="Rose Hot Pink" /> <span class="color-dot rose-hot-pink"></span> Rose Hot Pink</label>
+              <label class="color-option"><input type="checkbox" name="colors" value="White" /> <span class="color-dot white"></span> White</label>
+              <label class="color-option"><input type="checkbox" name="colors" value="Yellow" /> <span class="color-dot yellow"></span> Yellow</label>
+            </div>
+          </div>
+
+          <label class="toggle-label">
+            <input type="checkbox" name="allowGalleryPost" />
+            <span class="toggle-switch"></span>
+            <span class="toggle-text">Allow me to post my completed design to the gallery (with your approval first)</span>
+          </label>
+
+          <button class="button button--primary" type="submit">Send order</button>
+          <p id="form-status" class="form-status" role="status"></p>
+        </form>
+      </section>
+
+      <section class="section payment-section" id="payment">
+        <div class="section-heading">
+          <p class="eyebrow">🐉 Payment</p>
+          <h2>How the payment flow works</h2>
+        </div>
+        <div class="payment-card">
+          <p>1. Submit your files and request.</p>
+          <p>2. Receive a message with price and delivery timing.</p>
+          <p>3. Pay through Venmo to confirm your order.</p>
+          <p class="highlight">Venmo handle: @Eirik-Kloak-15</p>
+        </div>
+      </section>
+    </main>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="./app.js"></script>
+  </body>
+</html>
