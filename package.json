@@ -1,0 +1,15 @@
+{
+  "name": "kloakinvoice",
+  "version": "1.0.0",
+  "description": "Viking-themed invoice ordering website",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "dotenv": "^16.4.2",
+    "express": "^4.21.2",
+    "multer": "^1.4.1",
+    "nodemailer": "^7.0.1"
+  }
+}
