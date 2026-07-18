@@ -1,6 +1,14 @@
+// Initialize Supabase client
 const SUPABASE_URL = 'https://dhzrhgyjpqotoujfwdwl.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRoenJoZ3lqcHFvdG91amZ3ZHdsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQzOTk0MzcsImV4cCI6MjA5OTk3NTQzN30.rK02i_fFqcsZO6s9TCy-WUhXYic7Gg7p1Lrfrdu0qqI';
-const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+let supabaseClient;
+if (window.supabase && window.supabase.createClient) {
+  supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+} else {
+  console.error('Supabase library not loaded');
+}
+
 
 const form = document.querySelector('.order-form');
 const status = document.getElementById('form-status');
@@ -19,7 +27,7 @@ async function uploadFiles(files) {
 
   for (const file of files) {
     const filePath = `orders/${Date.now()}-${file.name.replace(/\s+/g, '-')}`;
-    const { error } = await supabase.storage.from('print-uploads').upload(filePath, file);
+    const { error } = await supabaseClient.storage.from('print-uploads').upload(filePath, file);
 
     if (error) {
       console.warn('Storage upload failed:', error.message);
@@ -65,7 +73,11 @@ if (form) {
         created_at: new Date().toISOString()
       };
 
-      const { error } = await supabase.from('orders').insert([order]);
+      if (!supabaseClient) {
+        throw new Error('Supabase client not initialized. Please check your internet connection.');
+      }
+
+      const { error } = await supabaseClient.from('orders').insert([order]);
 
       if (error) {
         throw error;
