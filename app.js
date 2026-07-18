@@ -5,10 +5,9 @@ const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 const form = document.querySelector('.order-form');
 const status = document.getElementById('form-status');
 
-function setStatus(message, isError = false) {
+function setStatus(message) {
   if (!status) return;
   status.textContent = message;
-  status.style.color = isError ? '#f5d47d' : '#f5d47d';
 }
 
 async function uploadFiles(files) {
@@ -44,8 +43,8 @@ if (form) {
 
     try {
       const formData = new FormData(form);
-      const files = formData.getAll('files');
-      const uploadedFiles = await uploadFiles(files.filter((file) => file instanceof File));
+      const files = Array.from(formData.getAll('files')).filter((file) => file instanceof File);
+      const uploadedFiles = await uploadFiles(files);
 
       const order = {
         name: (formData.get('name') || '').toString().trim(),
@@ -71,7 +70,7 @@ if (form) {
       form.reset();
     } catch (error) {
       console.error(error);
-      setStatus(error.message || 'The order could not be saved right now.', true);
+      setStatus(error.message || 'The order could not be saved right now.');
     } finally {
       button.disabled = false;
       button.textContent = 'Send order';
