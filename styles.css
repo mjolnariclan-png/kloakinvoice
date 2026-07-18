@@ -83,6 +83,21 @@ body {
   white-space: nowrap;
 }
 
+.hero__links {
+  flex-shrink: 0;
+  display: flex;
+  gap: 1.5rem;
+  align-items: center;
+}
+
+.hero__links .hero__link {
+  font-size: 0.95rem;
+}
+
+.hero__links .hero__link:hover {
+  color: #fff;
+}
+
 .eyebrow {
   color: var(--gold-soft);
   letter-spacing: 0.3em;
@@ -402,6 +417,11 @@ textarea:focus {
     font-size: 1.3rem;
   }
 
+  .hero__links {
+    justify-content: center;
+    gap: 1rem;
+  }
+
   .hero__actions {
     flex-direction: column;
     align-items: stretch;
@@ -410,6 +430,191 @@ textarea:focus {
   .button {
     width: 100%;
     text-align: center;
+  }
+}
+
+/* ============================================
+   CONTACT PAGE STYLES
+   ============================================ */
+
+.contact-section {
+  background: var(--bg);
+}
+
+.contact-intro {
+  color: var(--muted);
+  font-size: 1.1rem;
+  margin-top: 1rem;
+  max-width: 800px;
+}
+
+.contact-card {
+  background: linear-gradient(135deg, var(--panel) 0%, rgba(26, 20, 13, 0.8) 100%);
+  border: 1px solid rgba(216, 166, 58, 0.35);
+  border-radius: 0.5rem;
+  padding: 2.5rem;
+  margin: 2rem 0;
+}
+
+.contact-content {
+  text-align: center;
+}
+
+.contact-label {
+  color: var(--muted);
+  font-size: 0.95rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin-bottom: 1rem;
+}
+
+.contact-email {
+  display: inline-block;
+  font-size: 1.5rem;
+  color: var(--gold-soft);
+  text-decoration: none;
+  padding: 1rem 2rem;
+  border: 2px solid var(--gold);
+  border-radius: 0.5rem;
+  transition: all 0.3s ease;
+  font-weight: 600;
+}
+
+.contact-email:hover {
+  background: rgba(216, 166, 58, 0.1);
+  color: #fff;
+  text-decoration: none;
+}
+
+.contact-description {
+  color: var(--text);
+  margin-top: 1.5rem;
+  font-size: 1rem;
+  line-height: 1.6;
+  max-width: 600px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.contact-divider {
+  height: 1px;
+  background: linear-gradient(to right, transparent, var(--gold), transparent);
+  margin: 2rem 0;
+  opacity: 0.5;
+}
+
+.contact-info {
+  margin-top: 2rem;
+}
+
+.contact-info h3 {
+  color: var(--gold);
+  font-size: 1.2rem;
+  margin-bottom: 1rem;
+  text-align: center;
+}
+
+.contact-list {
+  list-style: none;
+  padding: 0;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+  margin: 0;
+}
+
+.contact-list li {
+  color: var(--text);
+  padding: 0.75rem;
+  background: rgba(216, 166, 58, 0.08);
+  border-left: 3px solid var(--gold);
+  padding-left: 1rem;
+  border-radius: 0.25rem;
+}
+
+.contact-cta {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+  margin-top: 2.5rem;
+  flex-wrap: wrap;
+}
+
+.button--secondary {
+  background: transparent;
+  color: var(--gold-soft);
+  border: 2px solid var(--gold);
+  font-weight: 600;
+}
+
+.button--secondary:hover {
+  background: rgba(216, 166, 58, 0.1);
+  color: #fff;
+}
+
+.viking-message {
+  background: linear-gradient(135deg, rgba(26, 20, 13, 0.9) 0%, rgba(138, 29, 29, 0.15) 100%);
+  border-top: 2px solid var(--gold);
+  border-bottom: 2px solid var(--gold);
+  text-align: center;
+  padding: 3rem 2rem !important;
+}
+
+.viking-quote {
+  font-size: 1.3rem;
+  color: var(--gold-soft);
+  font-style: italic;
+  line-height: 1.8;
+}
+
+.viking-quote p {
+  margin: 0;
+}
+
+@media (max-width: 900px) {
+  .contact-list {
+    grid-template-columns: 1fr;
+  }
+
+  .contact-card {
+    padding: 2rem;
+  }
+
+  .contact-email {
+    font-size: 1.2rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .contact-cta {
+    flex-direction: column;
+  }
+
+  .button {
+    width: 100%;
+  }
+
+  .contact-card {
+    padding: 1.5rem;
+  }
+
+  .viking-message {
+    padding: 2rem 1rem !important;
+  }
+
+  .viking-quote {
+    font-size: 1.1rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .contact-email {
+    font-size: 1.1rem;
+    padding: 0.75rem 1.5rem;
+  }
+
+  .contact-list li {
+    font-size: 0.9rem;
   }
 }
 

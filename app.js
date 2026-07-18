@@ -83,7 +83,7 @@ if (form) {
         throw error;
       }
 
-      setStatus('Your order was received. We will reach out with a quote and payment instructions soon.');
+      setStatus('Your order was received. We will reach out with a quote and payment instructions within 24hrs.');
       form.reset();
     } catch (error) {
       console.error(error);
