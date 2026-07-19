@@ -168,6 +168,70 @@
         color: #f5d47d;
         font-weight: 600;
       }
+
+      .order-status {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        margin: 1rem 0;
+      }
+
+      .order-status input[type="checkbox"] {
+        width: auto;
+        cursor: pointer;
+      }
+
+      .order-status label {
+        margin: 0;
+        cursor: pointer;
+        color: var(--gold-soft);
+      }
+
+      .file-upload-group {
+        margin: 1rem 0;
+      }
+
+      .file-input-wrapper {
+        position: relative;
+        display: inline-block;
+        width: 100%;
+      }
+
+      .file-input-wrapper input[type="file"] {
+        display: none;
+      }
+
+      .file-upload-label {
+        display: block;
+        padding: 0.75rem;
+        background: #000;
+        color: var(--text);
+        border: 1px solid var(--gold);
+        border-radius: 0.25rem;
+        cursor: pointer;
+        text-align: center;
+        transition: all 0.3s ease;
+      }
+
+      .file-upload-label:hover {
+        background: rgba(216, 166, 58, 0.1);
+        border-color: var(--gold-soft);
+      }
+
+      .file-upload-label.uploading {
+        opacity: 0.6;
+        cursor: not-allowed;
+      }
+
+      .upload-status {
+        font-size: 0.85rem;
+        color: var(--gold-soft);
+        margin-top: 0.5rem;
+      }
+
+      .upload-error {
+        color: #ff6b6b;
+      }
     </style>
   </head>
   <body>
@@ -283,6 +347,11 @@
               <div class="order-info">🎨 Colors: ${order.selected_colors?.join(', ') || 'None'}</div>
               <div class="order-info">📝 ${order.notes || 'No notes'}</div>
               
+              <div class="order-status">
+                <input type="checkbox" id="complete-${order.id}" class="order-complete-checkbox" data-order-id="${order.id}" ${order.status === 'completed' ? 'checked' : ''} />
+                <label for="complete-${order.id}">Mark as Completed</label>
+              </div>
+              
               <div class="add-to-gallery-form">
                 <h5 style="color: var(--gold-soft); margin: 0 0 1rem;">Add to Gallery</h5>
                 <div class="form-group">
@@ -293,8 +362,16 @@
                   <label>Description</label>
                   <textarea class="gallery-description" placeholder="Describe the print, colors used, etc...">${order.notes || ''}</textarea>
                 </div>
+                <div class="file-upload-group">
+                  <label style="display: block; color: var(--text); margin-bottom: 0.5rem; font-weight: 600;">Upload Image</label>
+                  <div class="file-input-wrapper">
+                    <input type="file" class="gallery-image-file" accept="image/*" />
+                    <label class="file-upload-label" for="file-${order.id}">Click to upload image</label>
+                  </div>
+                  <div class="upload-status" style="display: none;"></div>
+                </div>
                 <div class="form-group">
-                  <label>Image URL (or upload files to Supabase Storage)</label>
+                  <label>Image URL (or use file upload above)</label>
                   <input type="url" class="gallery-image" placeholder="https://..." />
                 </div>
                 <div class="button-group">
@@ -303,6 +380,9 @@
               </div>
             </div>
           `).join('');
+
+          // Setup handlers for the newly rendered elements
+          setupOrderHandlers();
         } catch (error) {
           console.error('Error loading orders:', error);
         }
@@ -391,6 +471,83 @@
         } catch (error) {
           console.error('Error deleting post:', error);
           alert('Error deleting post');
+        }
+      }
+
+      // Setup file upload handlers and completion toggles after loading orders
+      function setupOrderHandlers() {
+        // File upload handlers
+        const fileInputs = document.querySelectorAll('.gallery-image-file');
+        fileInputs.forEach(fileInput => {
+          const wrapper = fileInput.closest('.file-input-wrapper');
+          const label = wrapper.querySelector('.file-upload-label');
+          const statusDiv = wrapper.nextElementSibling;
+
+          fileInput.addEventListener('change', async (e) => {
+            if (e.target.files.length === 0) return;
+
+            const file = e.target.files[0];
+            const imageInput = fileInput.closest('.file-upload-group').nextElementSibling.querySelector('.gallery-image');
+
+            label.classList.add('uploading');
+            label.textContent = 'Uploading...';
+
+            try {
+              // Upload to Supabase Storage
+              const filePath = `gallery/${Date.now()}-${file.name.replace(/\s+/g, '-')}`;
+              const { error } = await supabaseClient.storage
+                .from('print-uploads')
+                .upload(filePath, file);
+
+              if (error) throw error;
+
+              // Get public URL
+              const { data: publicUrl } = supabaseClient.storage
+                .from('print-uploads')
+                .getPublicUrl(filePath);
+
+              imageInput.value = publicUrl.publicUrl;
+
+              statusDiv.style.display = 'block';
+              statusDiv.className = 'upload-status';
+              statusDiv.textContent = '✓ Image uploaded successfully';
+            } catch (error) {
+              console.error('Upload error:', error);
+              statusDiv.style.display = 'block';
+              statusDiv.className = 'upload-status upload-error';
+              statusDiv.textContent = '✗ Upload failed: ' + error.message;
+            } finally {
+              label.classList.remove('uploading');
+              label.textContent = 'Click to upload image';
+            }
+          });
+        });
+
+        // Completion toggle handlers
+        const checkboxes = document.querySelectorAll('.order-complete-checkbox');
+        checkboxes.forEach(checkbox => {
+          checkbox.addEventListener('change', async (e) => {
+            const orderId = e.target.dataset.orderId;
+            const isCompleted = e.target.checked;
+            await updateOrderStatus(orderId, isCompleted ? 'completed' : 'new');
+          });
+        });
+      }
+
+      async function updateOrderStatus(orderId, status) {
+        try {
+          const { error } = await supabaseClient
+            .from('orders')
+            .update({ status })
+            .eq('id', orderId);
+
+          if (error) throw error;
+
+          // Reload orders to refresh status display
+          loadPendingOrders();
+        } catch (error) {
+          console.error('Error updating order status:', error);
+          alert('Error updating order status');
         }
       }
     </script>
