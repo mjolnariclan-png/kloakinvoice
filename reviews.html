@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Reviews | Kloak 3D Prints</title>
+    <meta name="description" content="Customer reviews and testimonials for Kloak 3D Prints." />
+    <link rel="stylesheet" href="./styles.css" />
+    <style>
+      .reviews-container {
+        max-width: 900px;
+        margin: 0 auto;
+        padding: 2rem;
+      }
+
+      .reviews-split {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 3rem;
+        margin: 3rem 0;
+      }
+
+      .review-form-section {
+        background: var(--panel);
+        border: 1px solid rgba(216, 166, 58, 0.35);
+        border-radius: 0.5rem;
+        padding: 2rem;
+      }
+
+      .review-form-section h2 {
+        color: var(--gold-soft);
+        margin-top: 0;
+      }
+
+      .form-group {
+        margin: 1.5rem 0;
+      }
+
+      .form-group label {
+        display: block;
+        color: var(--text);
+        margin-bottom: 0.5rem;
+        font-weight: 600;
+      }
+
+      .form-group input,
+      .form-group textarea {
+        width: 100%;
+        padding: 0.75rem;
+        background: #000;
+        color: var(--text);
+        border: 1px solid var(--gold);
+        border-radius: 0.25rem;
+        font-family: inherit;
+        box-sizing: border-box;
+      }
+
+      .form-group textarea {
+        resize: vertical;
+        min-height: 120px;
+      }
+
+      .star-rating {
+        display: flex;
+        gap: 0.5rem;
+        font-size: 2rem;
+      }
+
+      .star {
+        cursor: pointer;
+        color: var(--muted);
+        transition: all 0.2s ease;
+      }
+
+      .star:hover,
+      .star.active {
+        color: var(--gold-soft);
+        transform: scale(1.1);
+      }
+
+      .submit-button {
+        width: 100%;
+        padding: 0.75rem;
+        background: var(--gold);
+        color: #000;
+        border: none;
+        border-radius: 0.25rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+      }
+
+      .submit-button:hover {
+        background: var(--gold-soft);
+        transform: scale(1.02);
+      }
+
+      .submit-button:disabled {
+        background: var(--muted);
+        cursor: not-allowed;
+        transform: scale(1);
+      }
+
+      .form-status {
+        margin-top: 1rem;
+        padding: 0.75rem;
+        border-radius: 0.25rem;
+        display: none;
+        text-align: center;
+      }
+
+      .form-status.success {
+        background: rgba(47, 93, 140, 0.2);
+        color: #5dade2;
+        display: block;
+      }
+
+      .form-status.error {
+        background: rgba(138, 29, 29, 0.2);
+        color: #ff6b6b;
+        display: block;
+      }
+
+      .reviews-list-section {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+      }
+
+      .reviews-list-section h2 {
+        color: var(--gold-soft);
+        margin-top: 0;
+      }
+
+      .review-card {
+        background: rgba(0, 0, 0, 0.3);
+        border-left: 3px solid var(--gold);
+        padding: 1.5rem;
+        border-radius: 0.25rem;
+        animation: slideIn 0.3s ease;
+      }
+
+      @keyframes slideIn {
+        from {
+          opacity: 0;
+          transform: translateY(-10px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      .review-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: start;
+        margin-bottom: 0.75rem;
+      }
+
+      .review-name {
+        color: var(--gold-soft);
+        font-weight: 600;
+        margin: 0;
+      }
+
+      .review-stars {
+        color: var(--gold);
+        font-size: 1.1rem;
+      }
+
+      .review-date {
+        color: var(--muted);
+        font-size: 0.85rem;
+        margin-top: 0.25rem;
+      }
+
+      .review-text {
+        color: var(--text);
+        line-height: 1.6;
+        margin: 0;
+      }
+
+      .no-reviews {
+        text-align: center;
+        color: var(--muted);
+        padding: 2rem;
+        background: rgba(0, 0, 0, 0.3);
+        border-radius: 0.5rem;
+      }
+
+      @media (max-width: 900px) {
+        .reviews-split {
+          grid-template-columns: 1fr;
+          gap: 2rem;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <header class="hero hero--compact">
+      <div class="hero__content">
+        <div class="hero__topbar">
+          <a class="brand" href="./home.html">Kloak 3D Prints</a>
+          <h1 class="hero__headline">⚔️ Customer Reviews</h1>
+          <div class="hero__links">
+            <a class="hero__link" href="./home.html">Home</a>
+            <a class="hero__link" href="./gallery.html">Gallery</a>
+            <a class="hero__link" href="./contact.html">Contact</a>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <main>
+      <div class="reviews-container">
+        <section class="reviews-split">
+          <!-- Review Submission Form -->
+          <div class="review-form-section">
+            <h2>Leave a Review</h2>
+            <form id="reviewForm">
+              <div class="form-group">
+                <label for="reviewName">Your Name</label>
+                <input type="text" id="reviewName" name="name" required placeholder="What should we call you?" />
+              </div>
+
+              <div class="form-group">
+                <label>Rating</label>
+                <div class="star-rating" id="starRating">
+                  <span class="star" data-rating="1">⭐</span>
+                  <span class="star" data-rating="2">⭐</span>
+                  <span class="star" data-rating="3">⭐</span>
+                  <span class="star" data-rating="4">⭐</span>
+                  <span class="star" data-rating="5">⭐</span>
+                </div>
+                <input type="hidden" id="reviewRating" name="rating" value="0" required />
+              </div>
+
+              <div class="form-group">
+                <label for="reviewText">Your Review</label>
+                <textarea
+                  id="reviewText"
+                  name="review"
+                  required
+                  placeholder="Share your experience with our 3D printing service..."
+                ></textarea>
+              </div>
+
+              <button type="submit" class="submit-button">Submit Review</button>
+              <div id="formStatus" class="form-status"></div>
+            </form>
+          </div>
+
+          <!-- Reviews Display -->
+          <div class="reviews-list-section">
+            <h2>What Customers Say</h2>
+            <div id="reviewsList">
+              <div class="no-reviews">Loading reviews...</div>
+            </div>
+          </div>
+        </section>
+      </div>
+    </main>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+    <script>
+      const SUPABASE_URL = 'https://dhzrhgyjpqotoujfwdwl.supabase.co';
+      const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRoenJoZ3lqcHFvdG91amZ3ZHdsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQzOTk0MzcsImV4cCI6MjA5OTk3NTQzN30.rK02i_fFqcsZO6s9TCy-WUhXYic7Gg7p1Lrfrdu0qqI';
+
+      let supabaseClient;
+      if (window.supabase && window.supabase.createClient) {
+        supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+      }
+
+      const form = document.getElementById('reviewForm');
+      const starRating = document.getElementById('starRating');
+      const ratingInput = document.getElementById('reviewRating');
+      const formStatus = document.getElementById('formStatus');
+      const reviewsList = document.getElementById('reviewsList');
+      let selectedRating = 0;
+
+      // Star rating interaction
+      const stars = starRating.querySelectorAll('.star');
+      stars.forEach(star => {
+        star.addEventListener('click', () => {
+          selectedRating = parseInt(star.dataset.rating);
+          ratingInput.value = selectedRating;
+          updateStarDisplay();
+        });
+
+        star.addEventListener('mouseover', () => {
+          const hoverRating = parseInt(star.dataset.rating);
+          stars.forEach(s => {
+            if (parseInt(s.dataset.rating) <= hoverRating) {
+              s.style.color = 'var(--gold-soft)';
+            } else {
+              s.style.color = 'var(--muted)';
+            }
+          });
+        });
+      });
+
+      starRating.addEventListener('mouseleave', updateStarDisplay);
+
+      function updateStarDisplay() {
+        stars.forEach(s => {
+          if (parseInt(s.dataset.rating) <= selectedRating) {
+            s.classList.add('active');
+            s.style.color = 'var(--gold-soft)';
+          } else {
+            s.classList.remove('active');
+            s.style.color = 'var(--muted)';
+          }
+        });
+      }
+
+      // Form submission
+      form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+
+        if (selectedRating === 0) {
+          showStatus('Please select a rating', 'error');
+          return;
+        }
+
+        const name = document.getElementById('reviewName').value.trim();
+        const review = document.getElementById('reviewText').value.trim();
+
+        if (!name || !review) {
+          showStatus('Please fill in all fields', 'error');
+          return;
+        }
+
+        try {
+          const submitButton = form.querySelector('.submit-button');
+          submitButton.disabled = true;
+          submitButton.textContent = 'Submitting...';
+
+          const { data, error } = await supabaseClient.from('reviews').insert([
+            {
+              customer_name: name,
+              rating: selectedRating,
+              review_text: review,
+              created_at: new Date().toISOString(),
+            },
+          ]);
+
+          if (error) throw error;
+
+          showStatus('✓ Thank you for your review!', 'success');
+          form.reset();
+          selectedRating = 0;
+          updateStarDisplay();
+          ratingInput.value = 0;
+
+          // Reload reviews
+          setTimeout(() => {
+            loadReviews();
+            formStatus.style.display = 'none';
+          }, 2000);
+        } catch (error) {
+          console.error('Error submitting review:', error);
+          showStatus('Error submitting review. Please try again.', 'error');
+        } finally {
+          const submitButton = form.querySelector('.submit-button');
+          submitButton.disabled = false;
+          submitButton.textContent = 'Submit Review';
+        }
+      });
+
+      function showStatus(message, type) {
+        formStatus.textContent = message;
+        formStatus.className = `form-status ${type}`;
+        formStatus.style.display = 'block';
+      }
+
+      async function loadReviews() {
+        try {
+          const { data, error } = await supabaseClient
+            .from('reviews')
+            .select('*')
+            .order('created_at', { ascending: false });
+
+          if (error) throw error;
+
+          if (!data || data.length === 0) {
+            reviewsList.innerHTML = '<div class="no-reviews">No reviews yet. Be the first to leave one!</div>';
+            return;
+          }
+
+          reviewsList.innerHTML = data
+            .map(
+              review => `
+            <div class="review-card">
+              <div class="review-header">
+                <h3 class="review-name">${escapeHtml(review.customer_name)}</h3>
+                <div class="review-stars">${'⭐'.repeat(review.rating)}</div>
+              </div>
+              <div class="review-date">${new Date(review.created_at).toLocaleDateString('en-US', {
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric',
+              })}</div>
+              <p class="review-text">${escapeHtml(review.review_text)}</p>
+            </div>
+          `
+            )
+            .join('');
+        } catch (error) {
+          console.error('Error loading reviews:', error);
+          reviewsList.innerHTML = '<div class="no-reviews">Unable to load reviews. Please try again later.</div>';
+        }
+      }
+
+      function escapeHtml(text) {
+        const map = {
+          '&': '&amp;',
+          '<': '&lt;',
+          '>': '&gt;',
+          '"': '&quot;',
+          "'": '&#039;',
+        };
+        return text.replace(/[&<>"']/g, m => map[m]);
+      }
+
+      // Load reviews on page load
+      loadReviews();
+    </script>
+  </body>
+</html>
