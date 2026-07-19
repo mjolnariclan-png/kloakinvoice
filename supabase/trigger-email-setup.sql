@@ -32,7 +32,6 @@ BEGIN
     'service', NEW.service::TEXT,
     'deadline', COALESCE(NEW.deadline::TEXT, ''),
     'notes', COALESCE(NEW.notes::TEXT, ''),
-    'venmo_handle', COALESCE(NEW.venmo_handle::TEXT, ''),
     'source_link', COALESCE(NEW.source_link::TEXT, ''),
     'selected_colors', COALESCE(NEW.selected_colors::TEXT[], ARRAY[]::TEXT[]),
     'file_names', COALESCE(NEW.file_names::TEXT[], ARRAY[]::TEXT[])

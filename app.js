@@ -63,7 +63,6 @@ if (form) {
         service: (formData.get('service') || '').toString().trim(),
         deadline: (formData.get('deadline') || '').toString().trim(),
         notes: (formData.get('notes') || '').toString().trim(),
-        venmo_handle: (formData.get('venmoHandle') || '').toString().trim(),
         source_link: (formData.get('sourceLink') || '').toString().trim(),
         selected_colors: selectedColors,
         allow_gallery_post: allowGalleryPost,

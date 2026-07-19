@@ -278,6 +278,7 @@
             <div class="order-card">
               <h4>${order.name}</h4>
               <div class="order-info">📧 ${order.email}</div>
+              <div class="order-info">☎️ ${order.phone || 'No phone'}</div>
               <div class="order-info">🖨️ ${order.service}</div>
               <div class="order-info">🎨 Colors: ${order.selected_colors?.join(', ') || 'None'}</div>
               <div class="order-info">📝 ${order.notes || 'No notes'}</div>

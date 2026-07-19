@@ -50,7 +50,6 @@ serve(async (req) => {
             <p><strong>Name:</strong> ${order.name}</p>
             <p><strong>Email:</strong> <a href="mailto:${order.email}" style="color: #f5d47d;">${order.email}</a></p>
             <p><strong>Phone:</strong> ${order.phone || "Not provided"}</p>
-            <p><strong>Venmo Handle:</strong> ${order.venmo_handle || "Not provided"}</p>
           </section>
 
           <section style="margin: 1.5rem 0;">
