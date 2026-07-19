@@ -50,28 +50,122 @@
           <p style="text-align: center; grid-column: 1 / -1; color: var(--muted);">Loading recent orders...</p>
         </div>
       </section>
+
+      <!-- Modal for viewing full order details -->
+      <div id="orderModal" class="modal" style="display: none;">
+        <div class="modal-content">
+          <button class="modal-close" onclick="closeModal()">✕</button>
+          <img id="modalImage" src="" alt="Order" style="width: 100%; max-height: 500px; object-fit: cover; border-radius: 0.5rem; margin-bottom: 1.5rem;" />
+          <h2 id="modalTitle" style="color: var(--gold-soft); margin: 0 0 1rem;"></h2>
+          <p id="modalDescription" style="color: var(--text); line-height: 1.6; margin: 0;"></p>
+        </div>
+      </div>
+
+      <style>
+        .modal {
+          position: fixed;
+          top: 0;
+          left: 0;
+          width: 100%;
+          height: 100%;
+          background: rgba(0, 0, 0, 0.85);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          z-index: 1000;
+        }
+
+        .modal-content {
+          background: var(--panel);
+          border: 1px solid rgba(216, 166, 58, 0.35);
+          border-radius: 0.5rem;
+          padding: 2rem;
+          max-width: 600px;
+          width: 90%;
+          max-height: 90vh;
+          overflow-y: auto;
+          position: relative;
+        }
+
+        .modal-close {
+          position: absolute;
+          top: 1rem;
+          right: 1rem;
+          background: transparent;
+          border: none;
+          color: var(--gold-soft);
+          font-size: 2rem;
+          cursor: pointer;
+          width: 2.5rem;
+          height: 2.5rem;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+        }
+
+        .modal-close:hover {
+          color: #fff;
+        }
+
+        .recent-item {
+          cursor: pointer;
+          transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .recent-item:hover {
+          transform: translateY(-4px);
+          box-shadow: 0 4px 16px rgba(216, 166, 58, 0.15);
+        }
+
+        .recent-item img {
+          width: 100%;
+          height: 200px;
+          object-fit: cover;
+          border-radius: 0.25rem;
+          margin-bottom: 1rem;
+        }
+      </style>
     </main>
 
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm"></script>
-    <script type="module">
-      import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
-
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+    <script>
       const SUPABASE_URL = 'https://dhzrhgyjpqotoujfwdwl.supabase.co';
-      const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRoenJoZ3lqcHFvdG91amZ3ZHdsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQzOTk0MzcsImV4cCI6MjA5OTk3NTQzN30.rK02i_fFqcsZO6s9TCy-WUhXYic7Gg7p1Lrfrdu0qqI';
+      const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRoenJoZ3lqcHFvdG91amZ3ZHdsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQzOTk0MzcsImV4cCI6MjA5OTk3NTQzN30.rK02i_fFqcsZO6s9TCy-WUhXYic7Gg7p1Lrfrdu0qqI';
 
-      const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
+      let supabaseClient;
+      if (window.supabase && window.supabase.createClient) {
+        supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+      }
+
+      function openModal(imageUrl, title, description) {
+        document.getElementById('modalImage').src = imageUrl;
+        document.getElementById('modalTitle').textContent = title;
+        document.getElementById('modalDescription').textContent = description;
+        document.getElementById('orderModal').style.display = 'flex';
+      }
+
+      function closeModal() {
+        document.getElementById('orderModal').style.display = 'none';
+      }
+
+      // Close modal when clicking outside content
+      document.getElementById('orderModal').addEventListener('click', (e) => {
+        if (e.target.id === 'orderModal') {
+          closeModal();
+        }
+      });
 
       async function loadRecentOrders() {
         try {
-          const { data, error } = await supabase
-            .from('orders')
-            .select('name, service, selected_colors, created_at')
-            .eq('allow_gallery_post', true)
+          // Query gallery_posts instead of orders - only admin-approved items
+          const { data, error } = await supabaseClient
+            .from('gallery_posts')
+            .select('id, title, description, image_url, created_at')
             .order('created_at', { ascending: false })
             .limit(3);
 
           if (error) {
-            console.error('Error fetching orders:', error);
+            console.error('Error fetching gallery posts:', error);
             document.getElementById('recentOrdersGrid').innerHTML = '<p style="grid-column: 1 / -1; text-align: center; color: var(--muted);">Unable to load recent orders.</p>';
             return;
           }
@@ -84,19 +178,17 @@
           const grid = document.getElementById('recentOrdersGrid');
           grid.innerHTML = '';
 
-          data.forEach(order => {
-            const colors = order.selected_colors || [];
-            const colorDisplay = colors.length > 0 ? colors.join(', ') : 'Custom';
-            const date = new Date(order.created_at).toLocaleDateString();
-
+          data.forEach(post => {
             const item = document.createElement('div');
-            item.className = 'recent-item';
+            item.className = 'recent-item card';
             item.innerHTML = `
-              <h3>${order.name}</h3>
-              <p><strong>${order.service}</strong></p>
-              <p>Colors: ${colorDisplay}</p>
-              <p style="font-size: 0.85rem; color: var(--gold);">${date}</p>
+              <img src="${post.image_url}" alt="${post.title}" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22300%22 height=%22200%22%3E%3Crect fill=%221a140d%22 width=%22300%22 height=%22200%22/%3E%3C/svg%3E'" />
+              <h3>${post.title}</h3>
+              <p style="color: var(--muted); margin: 0.5rem 0 0; font-size: 0.9rem;">Click to view</p>
             `;
+            item.addEventListener('click', () => {
+              openModal(post.image_url, post.title, post.description || '');
+            });
             grid.appendChild(item);
           });
         } catch (err) {
