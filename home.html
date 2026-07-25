@@ -150,6 +150,41 @@
         document.getElementById('orderModal').style.display = 'none';
       }
 
+      async function resolveImageUrl(imageRef) {
+        if (!imageRef || !supabaseClient) return '';
+
+        const value = String(imageRef).trim();
+        if (!value) return '';
+
+        const customPrefix = 'print-uploads:';
+        const publicPrefix = `${SUPABASE_URL}/storage/v1/object/public/print-uploads/`;
+        let filePath = '';
+
+        if (value.startsWith(customPrefix)) {
+          filePath = value.slice(customPrefix.length);
+        } else if (value.startsWith(publicPrefix)) {
+          filePath = decodeURIComponent(value.slice(publicPrefix.length));
+        } else if (/^https?:\/\//i.test(value)) {
+          return value;
+        } else {
+          filePath = value.replace(/^\/+/, '');
+        }
+
+        const { data, error } = await supabaseClient.storage
+          .from('print-uploads')
+          .createSignedUrl(filePath, 60 * 60 * 24 * 7);
+
+        if (!error && data?.signedUrl) {
+          return data.signedUrl;
+        }
+
+        const { data: publicData } = supabaseClient.storage
+          .from('print-uploads')
+          .getPublicUrl(filePath);
+
+        return publicData?.publicUrl || value;
+      }
+
       // Close modal when clicking outside content
       document.getElementById('orderModal').addEventListener('click', (e) => {
         if (e.target.id === 'orderModal') {
@@ -180,16 +215,21 @@
           const grid = document.getElementById('recentOrdersGrid');
           grid.innerHTML = '';
 
-          data.forEach(post => {
+          const postsWithUrls = await Promise.all(data.map(async (post) => ({
+            ...post,
+            resolved_image_url: await resolveImageUrl(post.image_url)
+          })));
+
+          postsWithUrls.forEach(post => {
             const item = document.createElement('div');
             item.className = 'recent-item card';
             item.innerHTML = `
-              <img src="${post.image_url}" alt="${post.title}" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22300%22 height=%22200%22%3E%3Crect fill=%221a140d%22 width=%22300%22 height=%22200%22/%3E%3C/svg%3E'" />
+              <img src="${post.resolved_image_url || post.image_url}" alt="${post.title}" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22300%22 height=%22200%22%3E%3Crect fill=%221a140d%22 width=%22300%22 height=%22200%22/%3E%3C/svg%3E'" />
               <h3>${post.title}</h3>
               <p style="color: var(--muted); margin: 0.5rem 0 0; font-size: 0.9rem;">Click to view</p>
             `;
             item.addEventListener('click', () => {
-              openModal(post.image_url, post.title, post.description || '');
+              openModal(post.resolved_image_url || post.image_url, post.title, post.description || '');
             });
             grid.appendChild(item);
           });

@@ -36,6 +36,41 @@
         supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
       }
 
+      async function resolveImageUrl(imageRef) {
+        if (!imageRef || !supabaseClient) return '';
+
+        const value = String(imageRef).trim();
+        if (!value) return '';
+
+        const customPrefix = 'print-uploads:';
+        const publicPrefix = `${SUPABASE_URL}/storage/v1/object/public/print-uploads/`;
+        let filePath = '';
+
+        if (value.startsWith(customPrefix)) {
+          filePath = value.slice(customPrefix.length);
+        } else if (value.startsWith(publicPrefix)) {
+          filePath = decodeURIComponent(value.slice(publicPrefix.length));
+        } else if (/^https?:\/\//i.test(value)) {
+          return value;
+        } else {
+          filePath = value.replace(/^\/+/, '');
+        }
+
+        const { data, error } = await supabaseClient.storage
+          .from('print-uploads')
+          .createSignedUrl(filePath, 60 * 60 * 24 * 7);
+
+        if (!error && data?.signedUrl) {
+          return data.signedUrl;
+        }
+
+        const { data: publicData } = supabaseClient.storage
+          .from('print-uploads')
+          .getPublicUrl(filePath);
+
+        return publicData?.publicUrl || value;
+      }
+
       async function loadGallery() {
         try {
           const { data, error } = await supabaseClient
@@ -52,9 +87,14 @@
             return;
           }
 
-          container.innerHTML = data.map(post => `
+          const postsWithUrls = await Promise.all(data.map(async (post) => ({
+            ...post,
+            resolved_image_url: await resolveImageUrl(post.image_url)
+          })));
+
+          container.innerHTML = postsWithUrls.map(post => `
             <article class="card gallery-card">
-              <img src="${post.image_url}" alt="${post.title}" style="width: 100%; height: 200px; object-fit: cover; border-radius: 0.25rem; margin-bottom: 1rem;" onerror="this.style.display='none'" />
+              <img src="${post.resolved_image_url || post.image_url}" alt="${post.title}" style="width: 100%; height: 200px; object-fit: cover; border-radius: 0.25rem; margin-bottom: 1rem;" onerror="this.style.display='none'" />
               <h3>${post.title}</h3>
               <p>${post.description || ''}</p>
             </article>

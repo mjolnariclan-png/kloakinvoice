@@ -39,6 +39,37 @@
         margin: 2rem 0;
       }
 
+      .tabs {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+        margin: 0 0 1.5rem;
+      }
+
+      .tab-button {
+        background: transparent;
+        border: 1px solid rgba(216, 166, 58, 0.55);
+        color: var(--gold-soft);
+        padding: 0.6rem 1rem;
+        border-radius: 999px;
+        cursor: pointer;
+        font-size: 0.9rem;
+      }
+
+      .tab-button.active {
+        background: rgba(216, 166, 58, 0.15);
+        border-color: var(--gold);
+        color: var(--text);
+      }
+
+      .tab-panel {
+        display: none;
+      }
+
+      .tab-panel.active {
+        display: block;
+      }
+
       .orders-list {
         display: flex;
         flex-direction: column;
@@ -61,6 +92,10 @@
         font-size: 0.9rem;
         color: var(--muted);
         margin: 0.5rem 0;
+      }
+
+      .order-info strong {
+        color: var(--text);
       }
 
       .order-info a {
@@ -265,6 +300,17 @@
       .upload-error {
         color: #ff6b6b;
       }
+
+      .order-status-badge {
+        display: inline-block;
+        margin-bottom: 0.5rem;
+        padding: 0.2rem 0.6rem;
+        border-radius: 999px;
+        font-size: 0.78rem;
+        background: rgba(216, 166, 58, 0.15);
+        color: var(--gold-soft);
+        border: 1px solid rgba(216, 166, 58, 0.35);
+      }
     </style>
   </head>
   <body>
@@ -292,9 +338,29 @@
       <div id="admin-page" style="display: none;">
         <div class="admin-container">
           <section class="admin-section">
-            <h2>📋 Customer Orders</h2>
-            <div id="pending-orders" class="orders-list">
-              <p style="color: var(--muted);">Loading orders...</p>
+            <h2>📋 Orders Workflow</h2>
+            <div class="tabs" role="tablist" aria-label="Order workflow tabs">
+              <button class="tab-button active" type="button" role="tab" aria-selected="true" aria-controls="tab-not-completed" data-tab-target="tab-not-completed">Not Completed</button>
+              <button class="tab-button" type="button" role="tab" aria-selected="false" aria-controls="tab-gallery-needed" data-tab-target="tab-gallery-needed">Completed - Gallery Needed</button>
+              <button class="tab-button" type="button" role="tab" aria-selected="false" aria-controls="tab-fully-completed" data-tab-target="tab-fully-completed">Fully Completed</button>
+            </div>
+
+            <div id="tab-not-completed" class="tab-panel active" role="tabpanel">
+              <div id="orders-not-completed" class="orders-list">
+                <p style="color: var(--muted);">Loading orders...</p>
+              </div>
+            </div>
+
+            <div id="tab-gallery-needed" class="tab-panel" role="tabpanel">
+              <div id="orders-gallery-needed" class="orders-list">
+                <p style="color: var(--muted);">Loading orders...</p>
+              </div>
+            </div>
+
+            <div id="tab-fully-completed" class="tab-panel" role="tabpanel">
+              <div id="orders-fully-completed" class="orders-list">
+                <p style="color: var(--muted);">Loading orders...</p>
+              </div>
             </div>
           </section>
 
@@ -351,70 +417,155 @@
       function showAdminPage() {
         loginPage.style.display = 'none';
         adminPage.style.display = 'block';
-        loadPendingOrders();
+        setupTabs();
+        loadOrdersWorkflow();
         loadGalleryPosts();
       }
 
-      async function loadPendingOrders() {
-        try {
-          const { data, error } = await supabaseClient
-            .from('orders')
-            .select('*')
-            .order('created_at', { ascending: false });
+      function setupTabs() {
+        const tabButtons = document.querySelectorAll('.tab-button');
+        const tabPanels = document.querySelectorAll('.tab-panel');
 
-          if (error) throw error;
+        tabButtons.forEach((button) => {
+          button.addEventListener('click', () => {
+            const targetId = button.dataset.tabTarget;
 
-          const container = document.getElementById('pending-orders');
-          if (!data || data.length === 0) {
-            container.innerHTML = '<p style="color: var(--muted);">No orders yet.</p>';
-            return;
+            tabButtons.forEach((btn) => {
+              btn.classList.remove('active');
+              btn.setAttribute('aria-selected', 'false');
+            });
+
+            tabPanels.forEach((panel) => {
+              panel.classList.remove('active');
+            });
+
+            button.classList.add('active');
+            button.setAttribute('aria-selected', 'true');
+
+            const panel = document.getElementById(targetId);
+            if (panel) {
+              panel.classList.add('active');
+            }
+          });
+        });
+      }
+
+      async function resolveImageUrl(imageRef) {
+        if (!imageRef || !supabaseClient) return '';
+
+        const value = String(imageRef).trim();
+        if (!value) return '';
+
+        const customPrefix = 'print-uploads:';
+        const publicPrefix = `${SUPABASE_URL}/storage/v1/object/public/print-uploads/`;
+        let filePath = '';
+
+        if (value.startsWith(customPrefix)) {
+          filePath = value.slice(customPrefix.length);
+        } else if (value.startsWith(publicPrefix)) {
+          filePath = decodeURIComponent(value.slice(publicPrefix.length));
+        } else if (/^https?:\/\//i.test(value)) {
+          return value;
+        } else {
+          filePath = value.replace(/^\/+/, '');
+        }
+
+        const { data, error } = await supabaseClient.storage
+          .from('print-uploads')
+          .createSignedUrl(filePath, 60 * 60 * 24 * 7);
+
+        if (!error && data?.signedUrl) {
+          return data.signedUrl;
+        }
+
+        const { data: publicData } = supabaseClient.storage
+          .from('print-uploads')
+          .getPublicUrl(filePath);
+
+        return publicData?.publicUrl || '';
+      }
+
+      function renderOrderFields(order) {
+        const colors = Array.isArray(order.selected_colors) && order.selected_colors.length > 0
+          ? order.selected_colors.join(', ')
+          : 'None provided';
+
+        const sourceLinkMarkup = order.source_link
+          ? `<div class="order-info"><strong>Source Link:</strong> <a href="${order.source_link}" target="_blank" rel="noopener noreferrer">${order.source_link}</a></div>`
+          : '<div class="order-info"><strong>Source Link:</strong> None provided</div>';
+
+        return `
+          <div class="order-info"><strong>Name:</strong> ${order.name || 'No name provided'}</div>
+          <div class="order-info"><strong>Email:</strong> ${order.email || 'No email provided'}</div>
+          <div class="order-info"><strong>Phone:</strong> ${order.phone || 'No phone provided'}</div>
+          <div class="order-info"><strong>Order Type:</strong> ${order.service || 'No order type provided'}</div>
+          <div class="order-info"><strong>Colors:</strong> ${colors}</div>
+          <div class="order-info"><strong>Notes:</strong> ${order.notes || 'No notes provided'}</div>
+          ${sourceLinkMarkup}
+          <div class="order-info"><strong>Allow Gallery Post:</strong> ${order.allow_gallery_post ? 'Yes' : 'No'}</div>
+        `;
+      }
+
+      async function renderFileLinks(order) {
+        const fileNames = Array.isArray(order.file_names) ? order.file_names : [];
+        const filePaths = Array.isArray(order.file_paths) ? order.file_paths : [];
+
+        if (filePaths.length === 0) {
+          return '<div class="order-info"><strong>Downloadable Files:</strong> None uploaded</div>';
+        }
+
+        const fileLinks = await Promise.all(filePaths.map(async (filePath, index) => {
+          const fileName = fileNames[index] || filePath.split('/').pop() || `file-${index + 1}`;
+          const fileUrl = await resolveImageUrl(`print-uploads:${filePath}`);
+
+          if (!fileUrl) {
+            return `<li>${fileName} (link unavailable)</li>`;
           }
 
-          container.innerHTML = data.map(order => {
-            const fileNames = Array.isArray(order.file_names) ? order.file_names : [];
-            const filePaths = Array.isArray(order.file_paths) ? order.file_paths : [];
+          return `<li><a href="${fileUrl}" target="_blank" rel="noopener noreferrer" download>${fileName}</a></li>`;
+        }));
 
-            const filesMarkup = filePaths.length > 0
-              ? `<div class="order-files">
-                  <div class="order-files-title">Uploaded Print Files</div>
-                  <ul class="order-files-list">
-                    ${filePaths.map((filePath, index) => {
-                      const { data: publicFile } = supabaseClient.storage
-                        .from('print-uploads')
-                        .getPublicUrl(filePath);
-                      const fileName = fileNames[index] || filePath.split('/').pop() || `file-${index + 1}`;
-                      return `<li><a href="${publicFile.publicUrl}" target="_blank" rel="noopener noreferrer">${fileName}</a></li>`;
-                    }).join('')}
-                  </ul>
-                </div>`
-              : '<div class="order-info">📎 No uploaded print files</div>';
+        return `
+          <div class="order-files">
+            <div class="order-files-title">Downloadable Files</div>
+            <ul class="order-files-list">${fileLinks.join('')}</ul>
+          </div>
+        `;
+      }
 
-            const sourceLinkMarkup = order.source_link
-              ? `<div class="order-info">🔗 <a href="${order.source_link}" target="_blank" rel="noopener noreferrer">Reference link</a></div>`
-              : '<div class="order-info">🔗 No reference link</div>';
+      async function buildOrderCard(order, options = {}) {
+        const fileMarkup = await renderFileLinks(order);
+        const statusLabel = order.status === 'completed' ? 'Completed' : 'Not Completed';
+        const showCompleteToggle = options.showCompleteToggle === true;
+        const showGalleryForm = options.showGalleryForm === true;
+        const showReopenToggle = options.showReopenToggle === true;
 
-            return `
-            <div class="order-card">
-              <h4>${order.name}</h4>
-              <div class="order-info">📧 ${order.email}</div>
-              <div class="order-info">☎️ ${order.phone || 'No phone'}</div>
-              <div class="order-info">🖨️ ${order.service}</div>
-              <div class="order-info">📅 Deadline: ${order.deadline || 'No deadline provided'}</div>
-              <div class="order-info">🎨 Colors: ${order.selected_colors?.join(', ') || 'None'}</div>
-              <div class="order-info">📝 ${order.notes || 'No notes'}</div>
-              ${sourceLinkMarkup}
-              ${filesMarkup}
-              
+        return `
+          <div class="order-card">
+            <div class="order-status-badge">${statusLabel}</div>
+            ${renderOrderFields(order)}
+            ${fileMarkup}
+
+            ${showCompleteToggle ? `
               <div class="order-status">
-                <input type="checkbox" id="complete-${order.id}" class="order-complete-checkbox" data-order-id="${order.id}" ${order.status === 'completed' ? 'checked' : ''} />
+                <input type="checkbox" id="complete-${order.id}" class="order-complete-checkbox" data-order-id="${order.id}" />
                 <label for="complete-${order.id}">Mark as Completed</label>
               </div>
-              
+            ` : ''}
+
+            ${showReopenToggle ? `
+              <div class="order-status">
+                <input type="checkbox" id="reopen-${order.id}" class="order-reopen-checkbox" data-order-id="${order.id}" checked />
+                <label for="reopen-${order.id}">Completed (uncheck to move back to Not Completed)</label>
+              </div>
+            ` : ''}
+
+            ${showGalleryForm ? `
               <div class="add-to-gallery-form">
                 <h5 style="color: var(--gold-soft); margin: 0 0 1rem;">Add to Gallery</h5>
                 <div class="form-group">
                   <label>Gallery Title</label>
-                  <input type="text" class="gallery-title" placeholder="Name of the print" value="${order.name}" />
+                  <input type="text" class="gallery-title" placeholder="Name of the print" value="${order.name || ''}" />
                 </div>
                 <div class="form-group">
                   <label>Description</label>
@@ -436,14 +587,65 @@
                   <button class="button button-small btn-approve" onclick="addToGallery('${order.id}', this)">Add to Gallery</button>
                 </div>
               </div>
-            </div>
-          `;
-          }).join('');
+            ` : ''}
+          </div>
+        `;
+      }
 
-          // Setup handlers for the newly rendered elements
+      async function renderOrdersInto(containerId, orders, options = {}) {
+        const container = document.getElementById(containerId);
+
+        if (!orders || orders.length === 0) {
+          container.innerHTML = '<p style="color: var(--muted);">No orders in this tab.</p>';
+          return;
+        }
+
+        const cards = await Promise.all(orders.map((order) => buildOrderCard(order, options)));
+        container.innerHTML = cards.join('');
+      }
+
+      async function loadOrdersWorkflow() {
+        try {
+          const { data: orders, error: ordersError } = await supabaseClient
+            .from('orders')
+            .select('*')
+            .order('created_at', { ascending: false });
+
+          if (ordersError) throw ordersError;
+
+          const { data: galleryPosts, error: galleryError } = await supabaseClient
+            .from('gallery_posts')
+            .select('order_id');
+
+          if (galleryError) throw galleryError;
+
+          const postedOrderIds = new Set(
+            (galleryPosts || [])
+              .map((post) => post.order_id)
+              .filter((id) => id !== null && id !== undefined)
+              .map((id) => String(id))
+          );
+
+          const allOrders = (orders || []).map((order) => ({
+            ...order,
+            is_posted_to_gallery: postedOrderIds.has(String(order.id))
+          }));
+
+          const notCompleted = allOrders.filter((order) => order.status !== 'completed');
+          const completedNeedsGallery = allOrders.filter(
+            (order) => order.status === 'completed' && order.allow_gallery_post && !order.is_posted_to_gallery
+          );
+          const fullyCompleted = allOrders.filter(
+            (order) => order.status === 'completed' && (!order.allow_gallery_post || order.is_posted_to_gallery)
+          );
+
+          await renderOrdersInto('orders-not-completed', notCompleted, { showCompleteToggle: true });
+          await renderOrdersInto('orders-gallery-needed', completedNeedsGallery, { showGalleryForm: true, showReopenToggle: true });
+          await renderOrdersInto('orders-fully-completed', fullyCompleted, { showReopenToggle: true });
+
           setupOrderHandlers();
         } catch (error) {
-          console.error('Error loading orders:', error);
+          console.error('Error loading workflow orders:', error);
         }
       }
 
@@ -451,9 +653,9 @@
         const card = button.closest('.order-card');
         const title = card.querySelector('.gallery-title').value;
         const description = card.querySelector('.gallery-description').value;
-        const imageUrl = card.querySelector('.gallery-image').value;
+        const imageRef = card.querySelector('.gallery-image').value;
 
-        if (!title || !imageUrl) {
+        if (!title || !imageRef) {
           alert('Please fill in title and image URL');
           return;
         }
@@ -468,14 +670,14 @@
               order_id: orderId,
               title,
               description,
-              image_url: imageUrl,
+              image_url: imageRef,
               created_at: new Date().toISOString()
             }]);
 
           if (error) throw error;
 
           alert('Added to gallery!');
-          loadPendingOrders();
+          loadOrdersWorkflow();
           loadGalleryPosts();
         } catch (error) {
           console.error('Error adding to gallery:', error);
@@ -501,9 +703,14 @@
             return;
           }
 
-          container.innerHTML = data.map(post => `
+          const postsWithUrls = await Promise.all(data.map(async (post) => ({
+            ...post,
+            resolved_image_url: await resolveImageUrl(post.image_url)
+          })));
+
+          container.innerHTML = postsWithUrls.map(post => `
             <div class="gallery-post-card">
-              <img src="${post.image_url}" alt="${post.title}" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22250%22 height=%22200%22%3E%3Crect fill=%22%231a140d%22 width=%22250%22 height=%22200%22/%3E%3Ctext x=%2250%25%22 y=%2250%25%22 dominant-baseline=%22middle%22 text-anchor=%22middle%22 fill=%22%23b5a98d%22 font-size=%2214%22%3EImage not found%3C/text%3E%3C/svg%3E'" />
+              <img src="${post.resolved_image_url || post.image_url}" alt="${post.title}" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22250%22 height=%22200%22%3E%3Crect fill=%22%231a140d%22 width=%22250%22 height=%22200%22/%3E%3Ctext x=%2250%25%22 y=%2250%25%22 dominant-baseline=%22middle%22 text-anchor=%22middle%22 fill=%22%23b5a98d%22 font-size=%2214%22%3EImage not found%3C/text%3E%3C/svg%3E'" />
               <h5>${post.title}</h5>
               <p>${post.description || 'No description'}</p>
               <button class="button button-small btn-delete" onclick="deleteGalleryPost(${post.id})">Delete</button>
@@ -560,12 +767,7 @@
 
               if (error) throw error;
 
-              // Get public URL
-              const { data: publicUrl } = supabaseClient.storage
-                .from('print-uploads')
-                .getPublicUrl(filePath);
-
-              imageInput.value = publicUrl.publicUrl;
+              imageInput.value = `print-uploads:${filePath}`;
 
               statusDiv.style.display = 'block';
               statusDiv.className = 'upload-status';
@@ -591,6 +793,15 @@
             await updateOrderStatus(orderId, isCompleted ? 'completed' : 'new');
           });
         });
+
+        const reopenCheckboxes = document.querySelectorAll('.order-reopen-checkbox');
+        reopenCheckboxes.forEach((checkbox) => {
+          checkbox.addEventListener('change', async (e) => {
+            const orderId = e.target.dataset.orderId;
+            const isCompleted = e.target.checked;
+            await updateOrderStatus(orderId, isCompleted ? 'completed' : 'new');
+          });
+        });
       }
 
       async function updateOrderStatus(orderId, status) {
@@ -602,8 +813,7 @@
 
           if (error) throw error;
 
-          // Reload orders to refresh status display
-          loadPendingOrders();
+          loadOrdersWorkflow();
         } catch (error) {
           console.error('Error updating order status:', error);
           alert('Error updating order status');
