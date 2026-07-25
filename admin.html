@@ -63,6 +63,39 @@
         margin: 0.5rem 0;
       }
 
+      .order-info a {
+        color: var(--gold-soft);
+        text-decoration: underline;
+      }
+
+      .order-files {
+        margin: 0.75rem 0;
+        padding: 0.75rem;
+        background: rgba(0, 0, 0, 0.25);
+        border: 1px solid rgba(216, 166, 58, 0.25);
+        border-radius: 0.25rem;
+      }
+
+      .order-files-title {
+        color: var(--gold-soft);
+        font-size: 0.9rem;
+        margin: 0 0 0.5rem;
+        font-weight: 600;
+      }
+
+      .order-files-list {
+        margin: 0;
+        padding-left: 1.25rem;
+      }
+
+      .order-files-list li {
+        margin: 0.2rem 0;
+      }
+
+      .order-files-list a {
+        color: var(--text);
+      }
+
       .add-to-gallery-form {
         background: rgba(0, 0, 0, 0.3);
         padding: 1rem;
@@ -259,7 +292,7 @@
       <div id="admin-page" style="display: none;">
         <div class="admin-container">
           <section class="admin-section">
-            <h2>📋 Pending Gallery Requests</h2>
+            <h2>📋 Customer Orders</h2>
             <div id="pending-orders" class="orders-list">
               <p style="color: var(--muted);">Loading orders...</p>
             </div>
@@ -327,25 +360,50 @@
           const { data, error } = await supabaseClient
             .from('orders')
             .select('*')
-            .eq('allow_gallery_post', true)
             .order('created_at', { ascending: false });
 
           if (error) throw error;
 
           const container = document.getElementById('pending-orders');
           if (!data || data.length === 0) {
-            container.innerHTML = '<p style="color: var(--muted);">No pending gallery requests.</p>';
+            container.innerHTML = '<p style="color: var(--muted);">No orders yet.</p>';
             return;
           }
 
-          container.innerHTML = data.map(order => `
+          container.innerHTML = data.map(order => {
+            const fileNames = Array.isArray(order.file_names) ? order.file_names : [];
+            const filePaths = Array.isArray(order.file_paths) ? order.file_paths : [];
+
+            const filesMarkup = filePaths.length > 0
+              ? `<div class="order-files">
+                  <div class="order-files-title">Uploaded Print Files</div>
+                  <ul class="order-files-list">
+                    ${filePaths.map((filePath, index) => {
+                      const { data: publicFile } = supabaseClient.storage
+                        .from('print-uploads')
+                        .getPublicUrl(filePath);
+                      const fileName = fileNames[index] || filePath.split('/').pop() || `file-${index + 1}`;
+                      return `<li><a href="${publicFile.publicUrl}" target="_blank" rel="noopener noreferrer">${fileName}</a></li>`;
+                    }).join('')}
+                  </ul>
+                </div>`
+              : '<div class="order-info">📎 No uploaded print files</div>';
+
+            const sourceLinkMarkup = order.source_link
+              ? `<div class="order-info">🔗 <a href="${order.source_link}" target="_blank" rel="noopener noreferrer">Reference link</a></div>`
+              : '<div class="order-info">🔗 No reference link</div>';
+
+            return `
             <div class="order-card">
               <h4>${order.name}</h4>
               <div class="order-info">📧 ${order.email}</div>
               <div class="order-info">☎️ ${order.phone || 'No phone'}</div>
               <div class="order-info">🖨️ ${order.service}</div>
+              <div class="order-info">📅 Deadline: ${order.deadline || 'No deadline provided'}</div>
               <div class="order-info">🎨 Colors: ${order.selected_colors?.join(', ') || 'None'}</div>
               <div class="order-info">📝 ${order.notes || 'No notes'}</div>
+              ${sourceLinkMarkup}
+              ${filesMarkup}
               
               <div class="order-status">
                 <input type="checkbox" id="complete-${order.id}" class="order-complete-checkbox" data-order-id="${order.id}" ${order.status === 'completed' ? 'checked' : ''} />
@@ -365,7 +423,7 @@
                 <div class="file-upload-group">
                   <label style="display: block; color: var(--text); margin-bottom: 0.5rem; font-weight: 600;">Upload Image</label>
                   <div class="file-input-wrapper">
-                    <input type="file" class="gallery-image-file" accept="image/*" />
+                    <input type="file" id="file-${order.id}" class="gallery-image-file" accept="image/*" />
                     <label class="file-upload-label" for="file-${order.id}">Click to upload image</label>
                   </div>
                   <div class="upload-status" style="display: none;"></div>
@@ -379,7 +437,8 @@
                 </div>
               </div>
             </div>
-          `).join('');
+          `;
+          }).join('');
 
           // Setup handlers for the newly rendered elements
           setupOrderHandlers();
